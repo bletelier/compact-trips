@@ -81,7 +81,7 @@ void show_stops(std::vector<std::vector<std::pair<int,int>>> &map, std::vector<s
 
 void simulate_trips(int seed, int n_trips, std::vector<std::vector<std::pair<int, int>>> &map, std::vector<std::bitset<BITS>> &bits, std::bitset<BITS> &transfer, std::vector<std::vector<int>> &map_line, int ns, std::string filename) {
     srand(seed);
-    std::string sfile = "../trips/"+filename+"_"+std::to_string(n_trips)+"_"+std::to_string(ns)+".txt";
+    std::string sfile = "../trips/"+filename+".txt";
     const char *file = sfile.c_str();
     FILE *fp2 = fopen(file, "w");
     std::cout << sfile << '\n';
@@ -89,7 +89,7 @@ void simulate_trips(int seed, int n_trips, std::vector<std::vector<std::pair<int
     fclose(fp2);
     std::vector<unsigned long> totals (4, 0);
     //std::cout << n_trips << '\n';
-    long eqa = 10000;
+    long eqa = 15000000;
     for(long i = 0; i < n_trips; ++i) {
         /*int stop = (rand() % (map.size()-1)) + 1;
         while(stop == start) {
@@ -111,7 +111,7 @@ void simulate_trips(int seed, int n_trips, std::vector<std::vector<std::pair<int
             try_again = simulate_t(start, len, map, bits, transfer, map_line, file);
         }
         totals[len-2]++;
-        if ((i+1) == eqa) {std::cout << (eqa/10000)*10 << '\n'; eqa += 10000;}
+        if ((i+1) == eqa) {std::cout << (eqa/15000000)*10 << '\n'; eqa += 15000000;}
     }
     unsigned int total = 0;
     for(int i = 0; i < 4; ++i) {
