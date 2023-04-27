@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
     int ns = 0;
     create_map(lines, map, bits, transfer, map_line, ns);
 
-    show_stops(map, map_line); 
+    //show_stops(map, map_line); 
     
     int seed, n_trips; std::cin >> seed >> n_trips;
     simulate_trips(seed, n_trips, map, bits, transfer, map_line, ns, filename);

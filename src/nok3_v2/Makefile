@@ -4,3 +4,7 @@ LIB = $(SDSL_DIR)/lib/libsdsl.a $(SDSL_DIR)/lib/libdivsufsort.a $(SDSL_DIR)/lib/
 
 all:
 	g++ -std=c++11 $(INCLUDES) create.cpp -o ../../build/nok3-v2_create $(LIB)
+	g++ -std=c++11 $(INCLUDES) ask_quantity.cpp -o ../../build/nok3-v2_ask_quantity $(LIB)
+	g++ -std=c++11 $(INCLUDES) ask_trips.cpp -o ../../build/nok3-v2_ask_trips $(LIB)
+	g++ -std=c++11 $(INCLUDES) ask_linestop.cpp -o ../../build/nok3-v2_ask_linestop $(LIB)
+	

@@ -469,7 +469,6 @@ namespace sdsl {
             od_matrix_rank0.load(in, &od_matrix);
             od_matrix_select.load(in, &od_matrix);
             od_pq.load(in);
-            std::cout << od_pq.size() - 1<< '\n';
             od_tld.resize(od_pq.size() - 1);
             load_vector(od_tld, in);
             read_member(od_matrix_n, in);
