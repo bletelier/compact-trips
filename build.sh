@@ -2,7 +2,7 @@
 mkdir -p build
 cd src/
 
-for folder in baseline k3_v1 k3_v2 nok3_v1 nok3_v2 nok3_v3 sintetic_trips_generator
+for folder in baseline TTR-C TTR PTR-C PTR sintetic_trips_generator
 do
     cd $folder
     make

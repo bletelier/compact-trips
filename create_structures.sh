@@ -2,7 +2,7 @@
 
 cd build/
 
-for exes in k3-v2_create
+for exes in baseline_create PTR_create PTR-C_create TTR_create TTR-C_create
 do
     for input in coruna-100 coruna-75 coruna-50 coruna-25
     do
