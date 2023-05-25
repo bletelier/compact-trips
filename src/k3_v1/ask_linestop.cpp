@@ -16,11 +16,8 @@ int main(int argc, char** argv) {
 
     std::cout << "Size of the structure: " << sdsl::size_in_bytes(k3_od) << " bytes.\n";
 
-    int n = 1000000;
-    srand(1);
-
-     std::cout << "\nQuantity Linestop Query: \n";
-    n = 1000;
+    std::cout << "\nQuantity Linestop Query: \n";
+    int n = 1000;
     srand(1);
     std::vector<int> queries3;
     for(int i = 0; i < n; ++i) {
@@ -28,13 +25,22 @@ int main(int argc, char** argv) {
         queries3.push_back(s);
     }
     unsigned long found3 = 0;
-    auto start = std::chrono::steady_clock::now();
+    unsigned long found_ = 0;
+    std::chrono::duration<double> elapsed(0.0);
+
     for(int i = 0; i < n; ++i) {
         int s = queries3[i];
-        found3 += k3_od.get_people_quantity_on_linestop(s); 
+        for(int k = 0; k < 5; ++k) {
+            std::map<std::pair<uint16_t,uint16_t>, uint32_t> res;
+            auto start = std::chrono::steady_clock::now();
+            found_ = k3_od.get_origin_destinations_linestop(s, res);
+            auto end = std::chrono::steady_clock::now();
+            elapsed += (end-start)/5;
+        
+        }
+        found3 += found_;
     }
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> elapsed = end-start;
+
     std::cout << "elapsed: " << elapsed.count() << " seconds, found: " << found3 << '\n';
     std::cout << "per_query: " << (elapsed.count()*1000000.0f)/(n*1.0f) << " microS\n";
     

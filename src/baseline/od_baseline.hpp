@@ -45,7 +45,8 @@ namespace sdsl {
         typedef uint16_t id_type;
         typedef t_value value_type;
         //Typename for obtaining the type inside a class
-        typedef sdsl::int_vector<32> t_iv;
+        typedef int_vector<32> t_iv;
+        typedef bit_vector t_bv;
         typedef std::vector<std::vector<uint16_t>> t_vv;
 
     private:
@@ -314,21 +315,21 @@ namespace sdsl {
             return res;
         }
 
-        value_type get_people_quantity_linestop(id_type s) {
-            value_type total = 0;
+        value_type get_origin_destination_linestop(id_type s, std::map<std::pair<id_type, id_type>, value_type> &res) {       
+            value_type ress = 0;
             value_type lid = lower_search(0, od_trips.size() - 1, s, 0);
-            //We check all trips that start with s and sum their quantities
+            
             if(lid != od_trips.size()) {
                 value_type rid = upper_search(lid, od_trips.size() - 1, s, 0);
-                for(value_type i = lid; i <= rid; ++i) {
-                    total += od_pq[i];
-                }
                 for(value_type i = 0; i < lid; ++i) {
                     if(od_trips[i][1] == s) continue;
+                    id_type o = od_trips[i][0] + 1;
+                    id_type d = od_trips[i][1] + 1;
                     for(value_type j = 2; j < od_trips[i].size(); ++j) {
                         if(od_trips[i][j] == s) {
-                            total += od_pq[i];
-                            break;
+                            (res.count({o,d}) == 0) ? res[{o,d}] = 1 : res[{o,d}]++;
+                            ress++;
+                            break;    
                         }
                     }
                 }
@@ -336,10 +337,12 @@ namespace sdsl {
                 //with s and were already calculated
                 for(value_type i = rid+1; i < od_trips.size(); ++i) {
                     if(od_trips[i][1] == s) continue;
+                    id_type o = od_trips[i][0] + 1;
+                    id_type d = od_trips[i][1] + 1;
                     for(value_type j = 2; j < od_trips[i].size(); ++j) {
-                        if(od_trips[i][j] == s) {
-                            total += od_pq[i];
-
+                        if(od_trips[i][j] == s) { 
+                            (res.count({o,d}) == 0) ? res[{o,d}] = 1 : res[{o,d}]++;
+                            ress++;
                             break;
                         }
                     }
@@ -348,15 +351,18 @@ namespace sdsl {
             else {
                 for(value_type i = 0; i < od_trips.size(); ++i) {
                     if(od_trips[i][1] == s) continue;
+                    id_type o = od_trips[i][0] + 1;
+                    id_type d = od_trips[i][1] + 1;
                     for(value_type j = 2; j < od_trips[i].size(); ++j) {
                         if(od_trips[i][j] == s) {
-                            total += od_pq[i];
+                            (res.count({o,d}) == 0) ? res[{o,d}] = 1 : res[{o,d}]++;
+                            ress++;
                             break;
                         }
                     }
                 }
             }
-            return total;
+            return ress;
         }
         
         

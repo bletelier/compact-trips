@@ -132,6 +132,9 @@ bool simulate_t(int start, int len, std::vector<std::vector<std::pair<int,int>>>
     std::bitset<BITS> my_transfer = transfer;
     my_transfer[start] = 0;
     trip.push_back(start);
+    std::bitset<BITS> allowed_stops =  std::move(std::bitset<BITS>{}.set());
+    //std::cout << allowed_stops << '\n';
+    allowed_stops[start] = 0;
     for(int l = 1; l < len; ++l) {
         
         std::set<int> possible_lines;
@@ -158,11 +161,14 @@ bool simulate_t(int start, int len, std::vector<std::vector<std::pair<int,int>>>
         //si una linea ya fue usada, no usarla de nuevo.
         if(l == len - 1) {
             //me voy a cualquier lado dentro de la ultima linea que estaba (diferente a inicio)
-            
+            //int tt = bits[*it].count ();
+            //std::cout << tt << '\n';
             int rnds = rand() % bits[*it].count() + 1;
+            int cc = 0;
             for(int i = 0, j = 0; i < BITS; ++i) {
+                if(cc == TRESHOLD) return true;
                 if(rnds == j) {
-                        if(used_stops.find(i-1) == used_stops.end()) {
+                        if(used_stops.find(i-1) == used_stops.end() and allowed_stops[i-1] == 1) {
                             trip.push_back(*it+1);
                             trip.push_back(i-1);
                             break;
@@ -171,6 +177,7 @@ bool simulate_t(int start, int len, std::vector<std::vector<std::pair<int,int>>>
                             rnds = rand() % bits[*it].count() + 1;
                             i = 0;
                             j = 0;
+                            cc++;
                         }
                 }
                 if(bits[*it].test(i)) j++;
@@ -178,6 +185,9 @@ bool simulate_t(int start, int len, std::vector<std::vector<std::pair<int,int>>>
         }
         else {
             //me voy a cualquier transfer que este en mi linea y me conecte con otra linea que no haya usado
+            for(int k = 0; k < BITS; ++k) {
+                if(bits[*it][k] == 1) allowed_stops[k] = 0;
+            }
             std::bitset<BITS> and_stop = bits[*it] & my_transfer;
             //std::cout << "aqui\n";
             while(and_stop.count() < 1) {
@@ -206,6 +216,7 @@ bool simulate_t(int start, int len, std::vector<std::vector<std::pair<int,int>>>
                     choosed_stop = i-1;
                     my_transfer[i-1] = 0;
                     used_stops.insert(i-1);
+                    allowed_stops[i-1] = 0;
                     //bits[*it][choosed_stop] = 0;   
                     break;
                 }
@@ -214,12 +225,18 @@ bool simulate_t(int start, int len, std::vector<std::vector<std::pair<int,int>>>
             //std::cout << "choosed: " << rnds << '\n'; 
         }
     }
-    
+
+    //for(int i = 0; i < trip.size(); ++i) {
+    //    std::cout << trip[i] << ' ';
+    //}
+    //std::cout << '\n';
+    //for(int i = 19; i >= 0; --i) std::cout << allowed_stops[i];
+    //std::cout << '\n';
     FILE *fp2 = fopen(file, "a+");
     fprintf(fp2, "%ld\n%d", trip.size() - (trip.size()/2), map_line[trip[0]][trip[1]-1]);
     //fprintf(fp2, "%d %d\n", n_trips, ns);
     for(int i = 2; i < trip.size()-1; i+=2) {
-        fprintf(fp2, " %d", map_line[trip[i]][trip[i-1]-1]);
+        fprintf(fp2, " %d", map_line[trip[i]][trip[i+1]-1]);
     }
 
     fprintf(fp2," %d\n",map_line[trip[trip.size()-1]][trip[trip.size()-2]-1]); 

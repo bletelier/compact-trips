@@ -30,18 +30,23 @@ int main(int argc, char** argv) {
     }
   
     int found = 0;
-    auto start = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed(0.0); 
+
     for(int i = 0; i < n; ++i) {
         int o = queries[i].first;
         int d = queries[i].second;
-
-        std::vector<std::vector<int>> res = k3_od.get_trips(o,d);
+        std::vector<std::vector<int>> res; 
+        for(int k = 0; k < 5; ++k) {
+            auto start = std::chrono::steady_clock::now();
+            res = k3_od.get_trips(o,d);
+            auto end = std::chrono::steady_clock::now();
+            elapsed += (end-start)/5;
+        }
         found += res.size();
 
     }
    
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> elapsed = end-start;
+
     std::cout << "elapsed: " << elapsed.count() << " seconds found: " << found << '\n';
     std::cout << "per_query: " << (elapsed.count()*1000000.0f)/(n*1.0f) << " microS\n";
     std::cout << "time_per_trip: " << (elapsed.count()*1000000.f)/(found*1.0f) << '\n';

@@ -45,12 +45,14 @@ namespace sdsl {
 
         //Definiton of types, useful when you need to know a type inside a class
         typedef uint64_t size_type;
+        typedef uint16_t id_type;
         typedef t_value value_type;
         typedef sdsl::bit_vector t_bv;
         //Typename for obtaining the type inside a class
         typedef typename t_bv::rank_1_type t_rank;
         typedef typename t_bv::rank_0_type t_rank0;
         typedef typename t_bv::select_1_type t_select;
+        typedef typename t_bv::select_0_type t_select0;
         typedef sdsl::int_vector<> t_iv;
         typedef sdsl::int_vector<32> t_32v;
         typedef sdsl::int_vector<16> t_16v;
@@ -61,7 +63,9 @@ namespace sdsl {
 
         t_bv od_matrix;
         t_rank0 od_matrix_rank0;
+        t_rank od_matrix_rank;
         t_select od_matrix_select;
+        t_select0 od_matrix_select0;
         t_ev od_pq;  //people quantity
         t_32v od_tl;  //trip len
         t_16v od_td;  //transfer description
@@ -172,6 +176,8 @@ namespace sdsl {
             std::cout << "creating rank0 and select support\n";
             od_matrix_rank0 = t_rank0(&od_matrix);
             od_matrix_select = t_select(&od_matrix);
+            od_matrix_rank = t_rank(&od_matrix);
+            od_matrix_select0 = t_select0(&od_matrix);
             std::cout << "done\n";
 
             assert(matrix_size - (n*n) == od_matrix_rank0(matrix_size));
@@ -299,32 +305,37 @@ namespace sdsl {
             return res; 
         }
 
-        value_type get_people_quantity_linestop(size_type s) {
+        value_type get_origin_destinations_linestop(size_type s, std::map<std::pair<id_type, id_type>, value_type> &res) {
             if(s >= od_matrix_n) return 0;
             int m_id_start = ((od_matrix_n * s) + 1) - 1;
             int m_id_end = m_id_start + od_matrix_n;
         
             value_type total = 0;
-            //start with s;
-           // std::cout << "start: " << s << ' ' << od_matrix.size() - (od_pq.size() - 1) << ' '<<m_id_end <<  "\n";
+
             int bp_id_s = m_id_start > 0 ? od_matrix_select(m_id_start) + 1:0;
-            //std::cout << "ded1\n";
             int bp_id_e = od_matrix_select(m_id_end);
-            //std::cout << "ded2\n";
             int ts_id_s = od_matrix_rank0(bp_id_s);
-            //std::cout << ts_id_s<<"\n";
             int ts_id_e = od_matrix_rank0(bp_id_e); 
-            total += od_pq[ts_id_e] - od_pq[ts_id_s];
-            //std::cout << ts_id_e<<"\n";
-            //std::cout << od_pq.size()<<"\n";
             int size = od_tl.size() - 1;
             
+            value_type last_rank = 0;
+            id_type last_o = 0, last_d = 0;
+
             for(size_type ts_id = 0; ts_id < ts_id_s; ts_id++) {
                 size_type idd = od_tl[ts_id];
                 size_type len = od_tl[ts_id + 1] - idd;
                 for(size_type td_id = idd; td_id < idd + len; ++td_id) {
                     if(od_td[td_id] == s) {
-                        total += od_pq[ts_id+1] - od_pq[ts_id];
+                        value_type s0 = od_matrix_select0(ts_id);
+                        value_type r1 = od_matrix_rank(s0);
+                        if(r1 != last_rank) 
+                        {
+                            last_o = (r1/od_matrix_n) + 1;
+                            last_d = (r1%od_matrix_n) + 1;
+                            last_rank = r1;
+                        }
+                        (res.count({last_o, last_d}) <= 0) ? res[{last_o, last_d}] = 1 : res[{last_o, last_d}]++;
+                        total++; 
                         break;
                     }
                 }
@@ -335,16 +346,21 @@ namespace sdsl {
                 size_type len = od_tl[ts_id + 1] - idd;
                 for(size_type td_id = idd; td_id < idd + len; ++td_id) {
                     if(od_td[td_id] == s) {
-                        total += od_pq[ts_id+1] - od_pq[ts_id];
+                        value_type s0 = od_matrix_select0(ts_id);
+                        value_type r1 = od_matrix_rank(s0);
+                        if(r1 != last_rank) 
+                        {
+                            last_o = (r1/od_matrix_n) + 1;
+                            last_d = (r1%od_matrix_n) + 1;
+                            last_rank = r1;
+                        }
+                        (res.count({last_o, last_d}) <= 0) ? res[{last_o, last_d}] = 1 : res[{last_o, last_d}]++;
+                        total++;            
                         break;
                     }
                 }
             }
-
-
-
-            return total;
-        
+            return total;        
         }
         
         
@@ -429,6 +445,8 @@ namespace sdsl {
             written_bytes += od_matrix.serialize(out, child, "matrix");
             written_bytes += od_matrix_rank0.serialize(out, child, "matrix_rank0");
             written_bytes += od_matrix_select.serialize(out, child, "matrix_select");
+            written_bytes += od_matrix_rank.serialize(out, child, "matrix_rank");
+            written_bytes += od_matrix_select0.serialize(out, child, "matrix_select0");
             written_bytes += od_pq.serialize(out, child, "pq");
             written_bytes += od_td.serialize(out, child, "td");
             written_bytes += od_tl.serialize(out, child, "tl");
@@ -443,6 +461,8 @@ namespace sdsl {
             od_matrix.load(in);
             od_matrix_rank0.load(in, &od_matrix);
             od_matrix_select.load(in, &od_matrix);
+            od_matrix_rank.load(in, &od_matrix);
+            od_matrix_select0.load(in, &od_matrix);
             od_pq.load(in);
             od_td.load(in);
             od_tl.load(in);

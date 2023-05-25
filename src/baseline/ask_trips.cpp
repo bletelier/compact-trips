@@ -30,14 +30,18 @@ int main(int argc, char** argv) {
     }
   
     int found = 0;
+    std::vector<std::vector<uint16_t>> res; 
     std::chrono::duration<double> elapsed(0.0);
+
     for(int i = 0; i < n; ++i) {
         int o = queries[i].first;
         int d = queries[i].second;
-    auto start = std::chrono::steady_clock::now();
-        std::vector<std::vector<uint16_t>> res = k3_od.get_trips(o,d);
-    auto end = std::chrono::steady_clock::now();
-    elapsed += (end - start);
+        for(int k = 0; k < 5; ++k) {
+            auto start = std::chrono::steady_clock::now();
+            res = k3_od.get_trips(o,d);
+            auto end = std::chrono::steady_clock::now();
+            elapsed += (end - start)/5;
+        }
         found += res.size();
     }
     std::cout << "elapsed: " << elapsed.count() << " seconds found: " << found << '\n';

@@ -29,15 +29,20 @@ int main(int argc, char** argv) {
         queries2.push_back({o,d});
     }
     unsigned long found2 = 0;
-    auto start = std::chrono::steady_clock::now();
+    unsigned int res = 0;
+    std::chrono::duration<double> elapsed(0.0);
+
     for(int i = 0; i < n; ++i) {
         int o = queries2[i].first;
         int d = queries2[i].second;
-        unsigned int res = k3_od.get_people_quantity(o,d);
+        for(int t = 0; t < 1; ++t) {
+            auto start = std::chrono::steady_clock::now();
+            res = k3_od.get_people_quantity(o,d);
+            auto end = std::chrono::steady_clock::now();
+            elapsed += (end-start)/1;
+        }
         found2 += res;
     }
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> elapsed = end-start;
     std::cout << "elapsed: " << elapsed.count() << " seconds, found: " << found2 << '\n';
     std::cout << "per_query: " << (elapsed.count()*1000000.0f)/(n*1.0f) << " microS\n";
     

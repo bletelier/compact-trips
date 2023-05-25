@@ -438,12 +438,16 @@ class k3_tree_od_v2: public k3_tree_base<>
                 for(int j = 0; j < od_ways[{x,y}].size(); ++j) {
                     int o = od_ways[{x,y}][j].second[0];
                     int d = od_ways[{x,y}][j].second[od_ways[{x,y}][j].second.size() - 1];
-                    if(od_ways[{x,y}][j].second.size() <= 2) {t1_add++; t2_add++; continue;}
+                    if(od_ways[{x,y}][j].second.size() <= 2) {
+                        t1_add++; 
+                        //t2_add++; 
+                        continue;
+                    }
                     else if(od_ways[{x,y}][j].second.size() == 3) {
                         std::vector<int> tr = od_ways[{x,y}][j].second;
                         transfer_1_map[{{o,d},tr[1]}] = t1_add + tm_1_id;
                         tm_1_id++;
-                        t2_add++;
+                        //t2_add++;
                         continue;   
                     }
                     for(int k = 1; k < od_ways[{x,y}][j].second.size() - 1; ++k) {
@@ -665,7 +669,7 @@ class k3_tree_od_v2: public k3_tree_base<>
         int bp_id_s = k_bp_select(m_id) + 1;
         int bp_id_e = k_bp_select(m_id+1);
         int ts_id_s = k_bp_rank(bp_id_s);
-        int ts_id_e = k_bp_rank(bp_id_e);
+        int ts_id_e = ts_id_s + (bp_id_e - bp_id_s);
         res += (k_pq[ts_id_e] - k_pq[ts_id_s]);
         
         /*for(int i = bp_id_s; i < bp_id_e; ++i) {
@@ -768,70 +772,20 @@ class k3_tree_od_v2: public k3_tree_base<>
         
     }
 
-    unsigned int get_people_quantity_on_linestop(int s) {
-        unsigned int res = 0;
-        //People who start its trip in the linestop S
-        {
-            int m_id_start = ((k_matrix_size * s) + 1) - 1;
-            int m_id_stop = m_id_start + k_matrix_size;
-            int bp_id_start = m_id_start > 0 ? k_bp_select(m_id_start) + 1 : 0;
-            int ts_id_start = k_bp_rank(bp_id_start);
-            int bp_id_stop = k_bp_select(m_id_stop);
-            int ts_id_stop = k_bp_rank(bp_id_stop);
-            //std::cout << k_bp << '\n';
-            //std::cout << k_ts << '\n';
-            //std::cout << k_pq << '\n';
-            //std::cout << m_id_start << '\n';
-            //int cnt = 0;
-            //int tdd = ts_id;
-            //while(cnt < k_matrix_size) {
-            //    if(!k_bp[bp_id]) {
-            //        res += k_pq[tdd];
-            //        tdd++;
-            //    }
-            //    else cnt++;
-            //    bp_id++;
-        
-                //std::cout << res << ' ' << cnt << ' ' << bp_id << ' ' << tdd << '\n';
-            //}
-            res += (k_pq[ts_id_stop] - k_pq[ts_id_start]);
-        }
-        //std::cout << res << '\n';
+    unsigned int get_origin_destinations_linestop(int s, std::map<std::pair<uint16_t, uint16_t>, uint32_t> &res) {
+        unsigned int total = 0;        
         //People who made at least 1 transfer and the transfer is S
-        
-
-        
-        
         {
-            std::vector<region_result> points;
-            get_region_k3_lr(0,0,s,k_matrix_size-1,k_matrix_size-1,s,points);
+            std::vector<tuple_result> points;
+            get_region_k3(0,0,s,k_matrix_size-1,k_matrix_size-1,s,points);
             int o, d;
             for(int i = 0; i < points.size(); ++i) {
-                o = std::get<0>(points[i]);
-                d = std::get<1>(points[i]);
-                int k3_l_rank_id = std::get<3>(points[i]);
-                int k3_id = k_k3_id[k3_l_rank_id];
-                int m_id = ((k_matrix_size * o) + (d+1)) - 1;
-                int bp_id = k_bp_select(m_id) + 1;
-                int ts_id = k_bp_rank(bp_id);
-                int rid = ts_id + k3_id;
-                res += (k_pq[rid + 1] - k_pq[rid]);
-                // int bp_id_e = k_bp_select(m_id + 1);
-                // int c = 0;
-                // for(int bpid = bp_id, tsid = ts_id; bpid < bp_id_e; ++bpid, ++tsid) {
-                    // if(k_ts[tsid] == 1) {
-                        // if(c == k3_id) {
-                            // res += k_pq[tsid + 1] - k_pq[tsid];
-                        // }
-                        // c++;
-                    // }
-                    // else if(k_ts[tsid] > 1) {
-                        // break;
-                    // }
-                // }
+                o = std::get<0>(points[i]) + 1;
+                d = std::get<1>(points[i]) + 1;
+                res[{o,d}] = 1;
+                total++;
             } 
-        } 
-        //std::cout << res << '\n';
+        }
 
         //People who made 2 or more transfer and one of those transfer is S
         {
@@ -839,28 +793,15 @@ class k3_tree_od_v2: public k3_tree_base<>
             get_regionl(0,0,s,k_matrix_size-1,k_matrix_size-1,s,points);
             int o, d;
             for(int i = 0; i < points.size(); ++i) {
-                o = std::get<0>(points[i]);
-                d = std::get<1>(points[i]);
+                o = std::get<0>(points[i]) + 1;
+                d = std::get<1>(points[i]) + 1;
                 int l_rank_id = std::get<3>(points[i]);
                 int n_t = (k_nv_psum[l_rank_id + 1] - k_nv_psum[l_rank_id]);
-
-                int nv_id = k_nv_psum[l_rank_id];
-                int m_id = ((k_matrix_size * o) + (d+1)) - 1;
-                int bp_id = k_bp_select(m_id) + 1;
-                int ts_id = k_bp_rank(bp_id);
-                for(int offset = 0; offset < n_t; ++offset) {
-                    int gen_id = nv_id + offset;
-                    int id = k_id[gen_id];
-                    
-                    int rid = id + ts_id;
-                    res += (k_pq[rid+1] - k_pq[rid]);
-                }
+                (res.count({o,d}) == 0) ? res[{o,d}] = n_t : res[{o,d}] += n_t;
+                total += n_t;
             } 
         }
-        //std::cout << res << '\n';
-        return res;
-
-
+        return total;
     }
 
     int get_matrix_size() {
@@ -921,7 +862,7 @@ class k3_tree_od_v2: public k3_tree_base<>
                     int gr = k_gr[gen_id];
                     
                     
-                    res[id][gr+1] = t;
+                    res[prev_res+id][gr+1] = t;
                 } 
             }
         }
@@ -1463,7 +1404,7 @@ class k3_tree_od_v2: public k3_tree_base<>
         written_bytes += k_k3_t_rank.serialize(out, child, "k3_t_rank");
         written_bytes += k_k3_l.serialize(out, child, "k3_l");
         written_bytes += k_k3_l_rank.serialize(out, child, "k3_l_rank");
-        written_bytes += k_k3_id.serialize(out, child, "k3_id");
+        //written_bytes += k_k3_id.serialize(out, child, "k3_id");
         
 
         written_bytes += k_nv_psum.serialize(out, child, "nv_psum");
@@ -1509,7 +1450,7 @@ class k3_tree_od_v2: public k3_tree_base<>
         k_k3_l.load(in);
         k_k3_l_rank.load(in);
         k_k3_l_rank.set_vector(&k_k3_l);
-        k_k3_id.load(in);
+        //k_k3_id.load(in);
  
         k_nv_psum.load(in);
         k_id.load(in);
